@@ -5,7 +5,7 @@ const storage = new Storage();
 const searchServiceName = 'search-potesara24-free'; // ここにあなたの検索サービス名を入力してください
 const indexName = 'documents'; // ここにあなたのインデックス名を入力してください
 
-async function registerDosumentToSearchService(document, azure_search_service_apikey_secret_id) {
+async function registerDosumentToSearchService(document, azure_search_service_apikey) {
     const endpoint = `https://${searchServiceName}.search.windows.net/indexes/${indexName}/docs/index?api-version=2023-11-01`;
 
     const vectorData = {
@@ -18,23 +18,23 @@ async function registerDosumentToSearchService(document, azure_search_service_ap
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'api-key': azure_search_service_apikey_secret_id
+            'api-key': azure_search_service_apikey
         },
         body: JSON.stringify(vectorData)
     });
 
-    if (!res.ok) {
-        const resJson = await res.json();
+    const resJson = await res.json();
+    const isError = resJson.value.some((value) => value.errorMessage != null)
+    if (isError) {
         throw new Error(resJson);
     }
 
-    const resJson = await res.json();
     console.log(resJson);
     return resJson;
 }
 
 functions.http('registerDataToVectorDB', async (req, res) => {
-    const { bucket, name, azure_search_service_apikey_secret_id } = req.body;
+    const { bucket, name, azure_search_service_apikey } = req.body;
     console.log(`start register vectorized data: {bucket: ${bucket}, name: ${name}}`);
 
     try {
@@ -42,22 +42,23 @@ functions.http('registerDataToVectorDB', async (req, res) => {
         const [contents] = await file.download();
         const jsonContent = JSON.parse(contents.toString());
 
+        const truncatedChunk = jsonContent.content.length > 10000 ? jsonContent.content.slice(0, 10000) : jsonContent.content;
+
         const document = {
             id: jsonContent.id,
             title: jsonContent.title,
-            chunk: jsonContent.content,
+            chunk: truncatedChunk,
             url: jsonContent?.url,
             embedding: jsonContent.contentVector
         };
 
-        console.log(document);
-        await registerDosumentToSearchService(document, azure_search_service_apikey_secret_id);
+        await registerDosumentToSearchService(document, azure_search_service_apikey);
         console.log(`success to register vectorized data: {bucket: ${bucket}, name: ${name}}`);
         res.status(200).send(document);
     } catch (error) {
-        console.log(`failed to register vectorized data: {bucket: ${bucket}, name: ${name}}`);
-        res.status(500).send({ error: 'Unable to read the JSON file from GCS' });
-        throw error;
+        console.log(`failed to register data: {bucket: ${bucket}, name: ${name}}`);
+        console.log(error);
+        res.status(500).send(`failed to register data: {bucket: ${bucket}, name: ${name}}`);
     }
 });
 

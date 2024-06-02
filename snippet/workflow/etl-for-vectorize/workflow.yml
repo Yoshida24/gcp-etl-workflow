@@ -12,7 +12,7 @@ main:
             - vectorize_function_url: 'https://asia-northeast1-playground-workflow.cloudfunctions.net/function-1'
             - register_function_url: 'https://asia-northeast1-playground-workflow.cloudfunctions.net/function-2'
             - openai_apikey_secret_id: 'openai-apikey'
-            - azure_search_service_apikey_secret_id: 'azure_search_service_apikey_secret_id'
+            - azure_search_service_apikey_secret_id: 'azure_search_apikey'
     - access_string_secret_openai_apikey:
         call: googleapis.secretmanager.v1.projects.secrets.versions.accessString
         args:
@@ -57,7 +57,7 @@ main:
             body:
                 bucket: ${dist_bucket_name}
                 name: ${dist_object_name}
-                azure_search_service_apikey: azure_search_service_apikey
+                azure_search_service_apikey: ${azure_search_service_apikey}
         result: upload_result
     - returnOutput:
         return: ${"upload completed"}
