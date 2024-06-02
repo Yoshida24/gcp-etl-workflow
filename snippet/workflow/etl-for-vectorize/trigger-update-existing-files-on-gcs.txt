@@ -1,0 +1,11 @@
+update-existing-files-on-gcs
+名前
+update-existing-files-on-gcs
+イベント プロバイダ
+Cloud Storage
+イベントタイプ
+google.cloud.storage.object.v1.metadataUpdated
+イベントの受信元
+filefoo-fles-source (asia-northeast1)
+サービス アカウント
+935667541363-compute@developer.gserviceaccount.com

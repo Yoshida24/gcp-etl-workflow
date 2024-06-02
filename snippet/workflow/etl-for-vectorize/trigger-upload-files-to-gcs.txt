@@ -1,0 +1,11 @@
+upload-files-to-gcs
+名前
+upload-files-to-gcs
+イベント プロバイダ
+Cloud Storage
+イベントタイプ
+google.cloud.storage.object.v1.finalized
+イベントの受信元
+filefoo-fles-source (asia-northeast1)
+サービス アカウント
+935667541363-compute@developer.gserviceaccount.com

@@ -1,0 +1,39 @@
+ロケーション タイプ
+Region
+ロケーション
+asia-northeast1 (東京)
+レプリケーション
+—
+デフォルトのストレージ クラス
+Standard
+リクエスト元による支払い
+
+タグ
+なし
+ラベル
+なし
+Cloud コンソールの URL
+https://console.cloud.google.com/storage/browser/filefoo-fles-vectorized
+gsutil URI
+gs://filefoo-fles-vectorized
+権限
+アクセス制御
+均一
+公開アクセスの防止
+バケットの設定により有効化
+公開アクセスのステータス
+非公開
+保護
+削除（復元可能）ポリシー:
+7 日
+オブジェクトのバージョニング
+オフ
+バケット保持ポリシー
+なし
+オブジェクト保持
+無効
+暗号化のタイプ
+Google が管理
+オブジェクトのライフサイクル
+ライフサイクル ルール
+なし

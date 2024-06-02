@@ -1,0 +1,63 @@
+# GCSにCSVファイルがアップロードされたら処理を開始するワークフロー
+main:
+    params: [event]
+    steps:
+    - init:
+        assign:
+            - project_id: ${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
+            - src_bucket_name: "${event.data.bucket}"
+            - src_object_name: "${event.data.name}"
+            - dist_bucket_name: 'filefoo-fles-vectorized'
+            - dist_object_name: "${event.data.name}"
+            - vectorize_function_url: 'https://asia-northeast1-playground-workflow.cloudfunctions.net/function-1'
+            - register_function_url: 'https://asia-northeast1-playground-workflow.cloudfunctions.net/function-2'
+            - openai_apikey_secret_id: 'openai-apikey'
+            - azure_search_service_apikey_secret_id: 'azure_search_service_apikey_secret_id'
+    - access_string_secret_openai_apikey:
+        call: googleapis.secretmanager.v1.projects.secrets.versions.accessString
+        args:
+            secret_id: ${openai_apikey_secret_id}
+            project_id: ${project_id}
+        result: openai_apikey
+    - access_string_secret_azure_search_service_apikey_secret_id:
+        call: googleapis.secretmanager.v1.projects.secrets.versions.accessString
+        args:
+            secret_id: ${azure_search_service_apikey_secret_id}
+            project_id: ${project_id}
+        result: azure_search_service_apikey
+    - vectorizeJson:
+        call: http.post
+        args:
+            url: ${vectorize_function_url}
+            headers:
+                Content-Type: 'application/json'
+            body:
+                bucket: ${src_bucket_name}
+                name: ${src_object_name}
+                openai_apikey: ${openai_apikey}
+        result: vectolized_data
+    - saveVectorizedJson:
+        call: googleapis.storage.v1.objects.insert
+        args:
+            bucket: '${dist_bucket_name}'
+            uploadType: "media"
+            name: ${src_object_name}
+            body: ${vectolized_data.body}
+    - saveLog :
+        call: sys.log
+        args:
+            data: ${"Upload vectorized json https://console.cloud.google.com/storage/browser/" + dist_bucket_name + " , " + src_object_name + " as JSON"}
+            severity: "INFO"
+    - registerVectorizedJsonToVectorDB:
+        call: http.post
+        args:
+            url: ${register_function_url}
+            headers:
+                Content-Type: 'application/json'
+            body:
+                bucket: ${dist_bucket_name}
+                name: ${dist_object_name}
+                azure_search_service_apikey: azure_search_service_apikey
+        result: upload_result
+    - returnOutput:
+        return: ${"upload completed"}
